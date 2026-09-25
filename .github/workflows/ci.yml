@@ -2,8 +2,8 @@ name: .NET CI/CD
 
 on:
   push:
-    branches: [ main ]
-    tags: [ "v*" ]
+    branches: [main]
+    tags: ['v*']
   pull_request:
 
 jobs:
@@ -13,14 +13,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: '8.0.x'
       - run: dotnet restore
       - run: dotnet build --no-restore -c Release
       - run: dotnet test --no-build -c Release --verbosity normal
 
   release:
     needs: test
-    if: startsWith(github.ref, "refs/tags/v")
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -38,18 +38,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: '8.0.x'
       - name: Publish
         run: dotnet publish src/HelloDotnet.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:Version=${{ github.ref_name }} -o publish
       - name: Show publish
         shell: bash
         run: ls -la publish/
-      - name: Pack (Linux)
-        if: runner.os != "Windows"
+      - name: Pack Linux
+        if: runner.os != 'Windows'
         shell: bash
         run: cd publish && tar -czf "../${{ matrix.archive }}" * && cd ..
-      - name: Pack (Windows)
-        if: runner.os == "Windows"
+      - name: Pack Windows
+        if: runner.os == 'Windows'
         shell: pwsh
         run: Compress-Archive -Path publish/* -DestinationPath "${{ matrix.archive }}"
       - name: Upload to Release
