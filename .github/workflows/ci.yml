@@ -26,8 +26,8 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - run: dotnet publish src/HelloDotnet.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:Version=${{ github.ref_name }} -o publish
-      - run: cd publish && tar -czf ../hello-dotnet-linux-x64.tar.gz * && cd ..
+      - run: dotnet publish src/HelloDotnet.csproj -c Release -o publish
+      - run: tar -czf hello-dotnet-linux-x64.tar.gz -C publish .
       - uses: actions/upload-artifact@v4
         with:
           name: linux
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      - run: dotnet publish src/HelloDotnet.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:Version=${{ github.ref_name }} -o publish
+      - run: dotnet publish src/HelloDotnet.csproj -c Release -o publish
       - run: Compress-Archive -Path publish\* -DestinationPath hello-dotnet-windows-x64.zip
       - uses: actions/upload-artifact@v4
         with:
