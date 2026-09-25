@@ -9,32 +9,21 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore -c Release
-
-      - name: Test
-        run: dotnet test --no-build -c Release --verbosity normal
+      - run: dotnet restore
+      - run: dotnet build --no-restore -c Release
+      - run: dotnet test --no-build -c Release --verbosity normal
 
   release:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.os }}
-
     permissions:
       contents: write
-
     strategy:
       fail-fast: false
       matrix:
@@ -49,49 +38,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Publish
-        run: >
-          dotnet publish src/HelloDotnet.csproj
-          -c Release
-          -r ${{ matrix.rid }}
-          --self-contained true
-          -p:PublishSingleFile=true
-          -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:Version=${{ github.ref_name }}
-          -o publish
+        run: dotnet publish src/HelloDotnet.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -p:Version=${{ github.ref_name }} -o publish
 
-      - name: Show publish dir (debug)
-        shell: bash
-        run: ls -la publish/
-
-      - name: Rename binary (Unix)
-        if: runner.os != 'Windows'
+      - name: Find and rename
         shell: bash
         run: |
-          if [ -f publish/hello-dotnet ]; then
-            mv publish/hello-dotnet publish/${{ matrix.artifact }}
+          echo "=== Содержимое publish/ ==="
+          ls -la publish/
+
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            SRC=$(find publish -maxdepth 1 -name "*.exe" -type f | head -n1)
           else
-            echo "❌ publish/hello-dotnet не найден. Содержимое publish/:"
-            ls -la publish/
+            SRC=$(find publish -maxdepth 1 -type f -executable ! -name "*.dll" ! -name "*.json" ! -name "*.pdb" | head -n1)
+          fi
+
+          echo "Найден исходный файл: $SRC"
+
+          if [ -z "$SRC" ]; then
+            echo "❌ Не нашли бинарник в publish/"
             exit 1
           fi
 
-      - name: Rename binary (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          if [ -f publish/hello-dotnet.exe ]; then
-            mv publish/hello-dotnet.exe publish/${{ matrix.artifact }}
-          else
-            echo "❌ publish/hello-dotnet.exe не найден. Содержимое publish/:"
-            ls -la publish/
-            exit 1
-          fi
+          mv "$SRC" "publish/${{ matrix.artifact }}"
+          echo "✅ Переименован в publish/${{ matrix.artifact }}"
+          ls -la publish/
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
