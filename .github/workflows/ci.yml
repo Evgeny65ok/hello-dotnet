@@ -36,6 +36,7 @@ jobs:
       contents: write
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -64,13 +65,33 @@ jobs:
           -p:Version=${{ github.ref_name }}
           -o publish
 
+      - name: Show publish dir (debug)
+        shell: bash
+        run: ls -la publish/
+
       - name: Rename binary (Unix)
         if: runner.os != 'Windows'
-        run: mv publish/hello-dotnet publish/${{ matrix.artifact }}
+        shell: bash
+        run: |
+          if [ -f publish/hello-dotnet ]; then
+            mv publish/hello-dotnet publish/${{ matrix.artifact }}
+          else
+            echo "❌ publish/hello-dotnet не найден. Содержимое publish/:"
+            ls -la publish/
+            exit 1
+          fi
 
       - name: Rename binary (Windows)
         if: runner.os == 'Windows'
-        run: mv publish/hello-dotnet.exe publish/${{ matrix.artifact }}
+        shell: bash
+        run: |
+          if [ -f publish/hello-dotnet.exe ]; then
+            mv publish/hello-dotnet.exe publish/${{ matrix.artifact }}
+          else
+            echo "❌ publish/hello-dotnet.exe не найден. Содержимое publish/:"
+            ls -la publish/
+            exit 1
+          fi
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
