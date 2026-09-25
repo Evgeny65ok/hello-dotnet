@@ -23,6 +23,7 @@
 
 ## Использование
 Скачай `hello-dotnet.tar.gz` из [Releases](../../releases), распакуй и запусти:
+<img width="696" height="442" alt="image" src="https://github.com/user-attachments/assets/449ab764-5378-4308-bb93-896b3472209c" />
 
 ```powershell
 Invoke-WebRequest -Uri "https://github.com/Evgeny65ok/hello-dotnet/releases/download/v1.0.0/hello-dotnet.tar.gz" -OutFile "hello-dotnet.tar.gz"
